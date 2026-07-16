@@ -1,14 +1,115 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { useCurrentLocation } from '../../src/hooks/useCurrentLocation';
+import { DEFAULT_MAP_DELTA } from '../../src/constants/location';
+import { COLORS } from '../../src/constants/colors';
 
-// S-05: ホーム（地図）画面 — Task 1 で実装
+// S-05: ホーム（地図）画面
 export default function HomeScreen() {
+  const router = useRouter();
+  const { location, hasPermission, isLoading } = useCurrentLocation();
+
+  const openSettings = () => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('app-settings:');
+    } else {
+      Linking.openSettings();
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text>ホーム（地図）</Text>
+      <MapView
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        region={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          ...DEFAULT_MAP_DELTA,
+        }}
+        showsUserLocation={hasPermission}
+        followsUserLocation={hasPermission}
+      >
+        {!hasPermission && (
+          <Marker
+            coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+            title="デフォルト地点（東京駅）"
+          />
+        )}
+      </MapView>
+
+      {/* 検索バー */}
+      <TouchableOpacity
+        style={styles.searchBar}
+        onPress={() => router.push('/search')}
+        accessibilityRole="search"
+        accessibilityLabel="目的地を検索"
+      >
+        <Text style={styles.searchPlaceholder}>目的地を検索...</Text>
+      </TouchableOpacity>
+
+      {/* 権限拒否バナー */}
+      {!hasPermission && !isLoading && (
+        <View style={styles.permissionBanner}>
+          <Text style={styles.permissionText}>現在地を使用するには位置情報の許可が必要です</Text>
+          <TouchableOpacity onPress={openSettings} accessibilityRole="button">
+            <Text style={styles.permissionLink}>設定を開く</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  searchBar: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    right: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  searchPlaceholder: {
+    color: COLORS.textSecondary,
+    fontSize: 16,
+  },
+  permissionBanner: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    right: 16,
+    backgroundColor: COLORS.warning,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  permissionText: {
+    flex: 1,
+    color: COLORS.surface,
+    fontSize: 13,
+    marginRight: 8,
+  },
+  permissionLink: {
+    color: COLORS.surface,
+    fontSize: 13,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 });

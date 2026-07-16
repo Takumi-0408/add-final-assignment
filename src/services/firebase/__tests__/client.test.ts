@@ -5,12 +5,12 @@
  */
 
 // firebase モジュールをモック（jest.mock はホイスティングされるため先頭に記述）
+import type { FirebaseOptions, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app';
+
 jest.mock('firebase/app');
 jest.mock('firebase/auth');
 jest.mock('firebase/firestore');
-
-import type { FirebaseOptions, FirebaseApp } from 'firebase/app';
-import { initializeApp, getApps } from 'firebase/app';
 
 const mockInitializeApp = initializeApp as jest.MockedFunction<typeof initializeApp>;
 const mockGetApps = getApps as jest.MockedFunction<typeof getApps>;
