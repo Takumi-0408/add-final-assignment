@@ -42,12 +42,21 @@ export async function searchWalkRoutes(
         });
         return result.data.routes;
       } catch (e) {
-        // Firebase HttpsError → AppError に変換
+        // Firebase HttpsError or ネットワークエラー → AppError に変換
         const err = e as { code?: string; message?: string };
+        const code = err.code;
+        // ネットワーク障害（code が undefined）の場合は network-error として扱う
+        if (!code) {
+          throw {
+            code: 'functions/network-error',
+            message: 'ネットワークエラーが発生しました。接続を確認してください',
+            recoverable: true,
+          } satisfies AppError;
+        }
         throw {
-          code: `functions/${err.code ?? 'unknown'}`,
-          message: toUserMessage(err.code),
-          recoverable: isRecoverable(err.code),
+          code: `functions/${code}`,
+          message: toUserMessage(code),
+          recoverable: isRecoverable(code),
         } satisfies AppError;
       }
     },

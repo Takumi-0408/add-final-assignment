@@ -22,15 +22,16 @@ export default function FavoritesScreen() {
   const { favorites, isLoading, error, fetchFavorites, deleteFavorite } = useFavoritesStore();
 
   // 未ログイン時はログイン画面へ
+  const uid = user?.uid;
   useEffect(() => {
-    if (!user) {
+    if (!uid) {
       router.replace('/(auth)/login');
       return;
     }
-    fetchFavorites(user.uid);
+    fetchFavorites(uid);
     // router・fetchFavorites は安定参照のため deps から除外
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [uid]);
 
   const handleDelete = (fav: Favorite) => {
     if (!user) return;

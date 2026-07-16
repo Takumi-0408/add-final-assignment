@@ -12,27 +12,14 @@ export default function SplashScreen() {
   const initialize = useAuthStore((s) => s.initialize);
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+    // initialize は同期的に unsubscribe を返す
+    const unsubscribe = initialize();
 
-    const bootstrap = async () => {
-      // 認証状態の購読を開始
-      unsubscribe = initialize();
+    AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED).then((val) => {
+      router.replace(val ? '/(tabs)' : '/onboarding');
+    });
 
-      // 初回起動判定
-      const onboardingCompleted = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
-
-      if (!onboardingCompleted) {
-        router.replace('/onboarding');
-      } else {
-        router.replace('/(tabs)');
-      }
-    };
-
-    bootstrap();
-
-    return () => {
-      unsubscribe?.();
-    };
+    return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

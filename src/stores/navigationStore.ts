@@ -59,9 +59,9 @@ export const useNavigationStore = create<NavigationState & NavigationActions>((s
     const routePoints = decodePolyline(currentRoute.polyline);
     const deviated = checkDeviated(location, routePoints, DEVIATION_THRESHOLD_M);
 
-    // 現在ステップを更新
-    const stepResult = findCurrentStep(location, currentRoute.steps.slice(currentStepIndex));
-    const newStepIndex = stepResult ? currentStepIndex + stepResult.index : currentStepIndex;
+    // 現在ステップを更新（全ステップを渡して絶対インデックスで判定）
+    const stepResult = findCurrentStep(location, currentRoute.steps);
+    const newStepIndex = stepResult ? stepResult.index : currentStepIndex;
 
     set({ isDeviated: deviated, currentStepIndex: newStepIndex });
   },

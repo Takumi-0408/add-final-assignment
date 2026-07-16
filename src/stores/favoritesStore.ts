@@ -26,6 +26,10 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>((set)
   error: null,
 
   fetchFavorites: async (uid) => {
+    if (!uid) {
+      set({ error: { code: 'auth/no-user', message: 'ログインが必要です', recoverable: true } });
+      return;
+    }
     set({ isLoading: true, error: null });
     try {
       const favorites = await fsGet(uid);
@@ -36,6 +40,10 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>((set)
   },
 
   saveFavorite: async (uid, data) => {
+    if (!uid) {
+      set({ error: { code: 'auth/no-user', message: 'ログインが必要です', recoverable: true } });
+      return;
+    }
     set({ isLoading: true, error: null });
     try {
       await fsSave(uid, data);
@@ -47,6 +55,10 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>((set)
   },
 
   deleteFavorite: async (uid, favoriteId) => {
+    if (!uid) {
+      set({ error: { code: 'auth/no-user', message: 'ログインが必要です', recoverable: true } });
+      return;
+    }
     set({ isLoading: true, error: null });
     try {
       await fsDel(uid, favoriteId);

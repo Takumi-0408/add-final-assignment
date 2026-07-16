@@ -23,12 +23,21 @@ function toFirestoreError(e: unknown): AppError {
     'firestore/permission-denied': '権限がありません。再ログインをお試しください',
     'firestore/unavailable': 'サービスが一時的に利用できません。しばらく後にお試しください',
     'firestore/not-found': 'データが見つかりませんでした',
+    'firestore/invalid-argument': 'データの形式が正しくありません',
   };
+
+  // 再試行すべきでないエラーコード（再試行しても成功しない）
+  const nonRecoverableCodes = [
+    'permission-denied',
+    'not-found',
+    'invalid-argument',
+    'already-exists',
+  ];
 
   return {
     code: fsCode,
     message: messageMap[fsCode] ?? 'データの操作中にエラーが発生しました',
-    recoverable: code !== 'permission-denied',
+    recoverable: !nonRecoverableCodes.includes(code),
   };
 }
 

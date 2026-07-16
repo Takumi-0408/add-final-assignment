@@ -48,11 +48,23 @@ function validateRequest(data: unknown): SearchRequest {
 
   const origin = d['origin'] as Record<string, unknown>;
   const destination = d['destination'] as Record<string, unknown>;
-  if (typeof origin['lat'] !== 'number' || typeof origin['lng'] !== 'number') {
-    throw new HttpsError('invalid-argument', '座標が不正です');
+  const oLat = origin['lat'];
+  const oLng = origin['lng'];
+  const dLat = destination['lat'];
+  const dLng = destination['lng'];
+
+  if (typeof oLat !== 'number' || typeof oLng !== 'number') {
+    throw new HttpsError('invalid-argument', '出発地の座標が不正です');
   }
-  if (typeof destination['lat'] !== 'number' || typeof destination['lng'] !== 'number') {
-    throw new HttpsError('invalid-argument', '座標が不正です');
+  if (typeof dLat !== 'number' || typeof dLng !== 'number') {
+    throw new HttpsError('invalid-argument', '目的地の座標が不正です');
+  }
+  // 座標値域チェック
+  if (oLat < -90 || oLat > 90 || oLng < -180 || oLng > 180) {
+    throw new HttpsError('invalid-argument', '出発地の座標が範囲外です');
+  }
+  if (dLat < -90 || dLat > 90 || dLng < -180 || dLng > 180) {
+    throw new HttpsError('invalid-argument', '目的地の座標が範囲外です');
   }
 
   const validPriorities: Priority[] = ['nature', 'park', 'river', 'quiet'];
@@ -60,8 +72,11 @@ function validateRequest(data: unknown): SearchRequest {
     ? (d['priorities'] as string[]).filter((p): p is Priority => validPriorities.includes(p as Priority))
     : [];
 
+  const rawDuration = d['maxDurationMinutes'];
   const maxDurationMinutes =
-    typeof d['maxDurationMinutes'] === 'number' ? d['maxDurationMinutes'] : undefined;
+    typeof rawDuration === 'number' && rawDuration > 0 && rawDuration <= 480
+      ? rawDuration
+      : undefined;
 
   return { origin: origin as unknown as LatLng, destination: destination as unknown as LatLng, priorities, maxDurationMinutes };
 }
@@ -178,16 +193,6 @@ async function fetchNearbyPoi(
   }
 }
 
-/** ルートの中間点を返す */
-function midpoint(route: DirectionsRoute): { lat: number; lng: number } {
-  const leg = route.legs[0];
-  if (!leg) return { lat: 0, lng: 0 };
-  const steps = leg.steps;
-  const mid = steps[Math.floor(steps.length / 2)];
-  if (!mid) return { lat: 0, lng: 0 };
-  // polyline の先頭座標を簡易デコード（最初の点のみ使用）
-  return { lat: leg.distance.value / 2, lng: 0 }; // 簡易実装（座標は近似）
-}
 
 async function scoreRoute(
   route: DirectionsRoute,

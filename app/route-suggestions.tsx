@@ -1,5 +1,12 @@
 import { memo, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useRouteStore } from '../src/stores/routeStore';
@@ -44,7 +51,8 @@ const RoutePolylines = memo(function RoutePolylines({
 // S-08: ルート提案画面
 export default function RouteSuggestionsScreen() {
   const router = useRouter();
-  const { routes, selectedRoute, selectRoute, destination } = useRouteStore();
+  const { routes, selectedRoute, selectRoute, destination, isSearching, searchError } =
+    useRouteStore();
 
   const handleSelect = useCallback(
     (route: WalkRoute) => {
@@ -60,6 +68,28 @@ export default function RouteSuggestionsScreen() {
 
   const displayRoute = selectedRoute ?? routes[0] ?? null;
   const mapCenter = destination?.location ?? { latitude: 35.6812, longitude: 139.7671 };
+
+  // ルート検索中ローディング
+  if (isSearching) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>ルートを検索中...</Text>
+      </View>
+    );
+  }
+
+  // 検索エラー
+  if (searchError && routes.length === 0) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>{searchError.message}</Text>
+        <TouchableOpacity onPress={() => router.back()} accessibilityRole="button">
+          <Text style={styles.backLink}>条件を変更する</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -130,6 +160,16 @@ function scoreColor(score: number): string {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.background,
+    gap: 16,
+  },
+  loadingText: { fontSize: 15, color: COLORS.textSecondary },
+  errorText: { fontSize: 15, color: COLORS.error, textAlign: 'center', paddingHorizontal: 24 },
+  backLink: { fontSize: 14, color: COLORS.primary, textDecorationLine: 'underline' },
   map: { flex: 1 },
   panel: {
     backgroundColor: COLORS.surface,

@@ -47,13 +47,22 @@ async function withLoading(
   }
 }
 
+/** 既存の unsubscribe を保持して二重登録を防ぐ */
+let _authUnsubscribe: (() => void) | null = null;
+
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   ...initialState,
 
   initialize: () => {
-    return subscribeAuthState((user) => {
+    // 既存の購読を解除してから再登録（StrictMode での二重呼び出し対策）
+    _authUnsubscribe?.();
+    _authUnsubscribe = subscribeAuthState((user) => {
       set({ user });
     });
+    return () => {
+      _authUnsubscribe?.();
+      _authUnsubscribe = null;
+    };
   },
 
   signInAnonymous: async () => {

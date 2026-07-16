@@ -56,10 +56,13 @@ export function findCurrentStep(current: LatLng, steps: RouteStep[]): StepResult
     const step = steps[i]!;
     const points = decodePolyline(step.polyline);
     if (points.length === 0) continue;
-    const firstPoint = points[0]!;
-    const d = distanceBetween(current, firstPoint);
-    if (d < bestDistance) {
-      bestDistance = d;
+    // ステップの全点との最小距離を求める（先頭点のみより精度が高い）
+    const minDist = points.reduce((min, pt) => {
+      const d = distanceBetween(current, pt);
+      return d < min ? d : min;
+    }, Infinity);
+    if (minDist < bestDistance) {
+      bestDistance = minDist;
       bestIndex = i;
     }
   }
