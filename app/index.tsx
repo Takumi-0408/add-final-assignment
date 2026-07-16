@@ -4,8 +4,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../src/stores/authStore';
 import { COLORS } from '../src/constants/colors';
-
-const ONBOARDING_KEY = 'onboardingCompleted';
+import { STORAGE_KEYS } from '../src/constants/app';
 
 // S-01: スプラッシュ / ルートリダイレクト
 export default function SplashScreen() {
@@ -20,7 +19,7 @@ export default function SplashScreen() {
       unsubscribe = initialize();
 
       // 初回起動判定
-      const onboardingCompleted = await AsyncStorage.getItem(ONBOARDING_KEY);
+      const onboardingCompleted = await AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
 
       if (!onboardingCompleted) {
         router.replace('/onboarding');

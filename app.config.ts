@@ -44,4 +44,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
   },
+  extra: {
+    // プライバシーポリシー・利用規約 URL（リリース前に実際の URL に変更）
+    privacyPolicyUrl: 'https://example.com/privacy',
+    termsOfServiceUrl: 'https://example.com/terms',
+    eas: {
+      projectId: process.env.EAS_PROJECT_ID ?? '',
+    },
+  },
 });

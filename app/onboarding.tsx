@@ -3,8 +3,7 @@ import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS } from '../src/constants/colors';
-
-const ONBOARDING_KEY = 'onboardingCompleted';
+import { STORAGE_KEYS } from '../src/constants/app';
 
 // S-02: オンボーディング画面
 export default function OnboardingScreen() {
@@ -12,12 +11,12 @@ export default function OnboardingScreen() {
 
   const handleStart = async () => {
     await Location.requestForegroundPermissionsAsync();
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+    await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
     router.replace('/(tabs)');
   };
 
   const handleSkip = async () => {
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+    await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
     router.replace('/(tabs)');
   };
 

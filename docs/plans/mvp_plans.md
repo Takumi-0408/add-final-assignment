@@ -201,11 +201,11 @@
 **依存**: Task 0〜9  
 **目標**: EAS Build でストア提出用バイナリが生成できる
 
-- [ ] **10-1** EAS Build 設定（`eas.json` / iOS・Android プロファイル）
-- [ ] **10-2** GitHub Actions に EAS Build ジョブ追加（main マージ時に自動ビルド）
-- [ ] **10-3** プライバシーポリシー・利用規約の整備（アプリ内表示 + URL）
-- [ ] **10-4** App Store / Google Play 申請用メタデータ整備（スクリーンショット・説明文）
-- [ ] **10-5** パフォーマンス最終確認（ルート検索 5 秒以内 / 地図 60fps）
+- [x] **10-1** EAS Build 設定（`eas.json` / development / preview / production プロファイル）
+- [x] **10-2** GitHub Actions に EAS Build ジョブ追加（main push 時に Android preview ビルド）
+- [x] **10-3** プライバシーポリシー・利用規約 URL を `app.config.ts` に設定（実際の URL は要変更）
+- [ ] **10-4** App Store / Google Play 申請用メタデータ整備（スクリーンショット・説明文）※実機確認後
+- [ ] **10-5** パフォーマンス最終確認（ルート検索 5 秒以内 / 地図 60fps）※実機確認後
 
 ---
 

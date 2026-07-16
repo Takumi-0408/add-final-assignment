@@ -7,6 +7,7 @@ import { useAuthStore } from '../src/stores/authStore';
 import { useFavoritesStore } from '../src/stores/favoritesStore';
 import { formatDistance, formatDuration } from '../src/utils/format';
 import { COLORS } from '../src/constants/colors';
+import { FAVORITE_NAME_MAX_LENGTH } from '../src/constants/app';
 
 // S-10: 散歩サマリー画面
 export default function SummaryScreen() {
@@ -95,7 +96,7 @@ export default function SummaryScreen() {
           onChangeText={setRouteName}
           placeholder="ルート名を入力（例: 朝の公園コース）"
           placeholderTextColor={COLORS.textDisabled}
-          maxLength={50}
+          maxLength={FAVORITE_NAME_MAX_LENGTH}
           accessibilityLabel="ルート名"
         />
         {saveError && <Text style={styles.errorText}>{saveError.message}</Text>}
