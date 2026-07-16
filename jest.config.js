@@ -4,7 +4,10 @@ module.exports = {
     {
       displayName: 'unit',
       preset: 'jest-expo/node',
-      testMatch: ['<rootDir>/src/**/__tests__/**/*.test.ts'],
+      testMatch: [
+        '<rootDir>/src/**/__tests__/**/*.test.ts',
+        '<rootDir>/src/**/__tests__/**/*.test.tsx',
+      ],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
       },
@@ -16,8 +19,7 @@ module.exports = {
       ],
     },
   ],
-  // カバレッジ閾値は services / utils の実装が揃う Task 9 で有効化する
-  // coverageThreshold: {
-  //   global: { lines: 70 },
-  // },
+  coverageThreshold: {
+    global: { lines: 70 },
+  },
 };
