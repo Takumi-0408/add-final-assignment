@@ -1,7 +1,7 @@
 # 散歩ナビ（仮称）仕様書
 
-- **バージョン**: 1.1.0
-- **最終更新日**: 2026-07-02
+- **バージョン**: 1.2.0
+- **最終更新日**: 2026-07-16
 - **ステータス**: ドラフト
 - **開発体制**: 個人開発（リリース期限なし）。将来的なチーム開発への移行を想定した運用ルールを併記する
 
@@ -203,11 +203,12 @@ graph TB
 | ナビゲーション | Expo Router | 画面遷移 |
 | 認証 | Firebase Authentication | メール/パスワード・Google認証 |
 | データベース | Firestore | ユーザーデータ・お気に入りの保存 |
-| サーバーロジック | Cloud Functions for Firebase | ルート検索プロキシ・スコアリング |
-| 状態管理 | Zustand | ナビ状態・ルート候補などのグローバル状態管理 |
+| サーバーロジック | Cloud Functions for Firebase（Gen 2 / Node.js 20 + esbuild） | ルート検索プロキシ・スコアリング |
+| 状態管理 | Zustand | ナビ状態・ルート候補などのグローバル状態管理（サーバー状態も含めて一元管理） |
 | 地図 | Google Maps SDK（react-native-maps） | 地図表示・ポリライン描画 |
 | 場所検索 | Google Places API | 目的地検索・POI取得 |
 | 経路検索 | Google Directions API | 徒歩ルート候補の取得 |
+| ターンバイターン | Directions API steps を自前処理 | 現在地と steps の距離で案内を制御 |
 | 位置情報 | expo-location | GPS取得 |
 | Lint / Format | ESLint / Prettier | コード品質維持 |
 | テスト | Jest / React Native Testing Library | 単体・コンポーネントテスト |
@@ -750,3 +751,4 @@ MVPのスコープは以下の8機能とする（詳細は[4章](#4-機能要件
 | --- | --- | --- |
 | 2026-07-02 | 1.0.0 | 初版作成 |
 | 2026-07-02 | 1.1.0 | ヒアリング結果を反映（状態管理にZustandを採用、開発体制を個人開発と明記、レビュー運用を調整） |
+| 2026-07-16 | 1.2.0 | MVP実装計画策定に伴い技術スタックを確定（Cloud Functions Gen 2 / Node.js 20 + esbuild、ターンバイターン自前処理方針を明記） |
