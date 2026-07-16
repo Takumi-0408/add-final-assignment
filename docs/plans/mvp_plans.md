@@ -40,15 +40,15 @@
 **依存**: なし  
 **目標**: CI が通り、空のアプリが起動できる状態を作る
 
-- [ ] **0-1** Expo + TypeScript プロジェクト初期化（`npx create-expo-app` / strict モード有効化）
-- [ ] **0-2** ESLint / Prettier 設定（ルール定義・`.eslintrc` / `.prettierrc`）
-- [ ] **0-3** Jest + React Native Testing Library 設定（`jest.config.js` / サンプルテスト通過確認）
-- [ ] **0-4** GitHub Actions CI 設定（lint / typecheck / test を PR ごとに自動実行）
-- [ ] **0-5** Expo Router によるルーティング雛形・タブ構成（`(tabs)/`, `(auth)/` グループ）
-- [ ] **0-6** Firebase プロジェクト作成・SDK 導入（Auth / Firestore / Functions）
-- [ ] **0-7** Firestore セキュリティルール初期版の実装・デプロイ（`firestore.rules`）
-- [ ] **0-8** Google Maps Platform 設定・APIキー発行・キー制限設定（`.env.example` 整備）
-- [ ] **0-9** Cloud Functions プロジェクト初期化（Gen 2 / Node.js 20 / esbuild / TypeScript）
+- [x] **0-1** Expo + TypeScript プロジェクト初期化（`npx create-expo-app` / strict モード有効化）
+- [x] **0-2** ESLint / Prettier 設定（ルール定義・`eslint.config.js` / `.prettierrc`）
+- [x] **0-3** Jest + React Native Testing Library 設定（`jest.config.js` / サンプルテスト通過確認）
+- [x] **0-4** GitHub Actions CI 設定（lint / typecheck / test を push/PR ごとに自動実行）
+- [x] **0-5** Expo Router によるルーティング雛形・タブ構成（`(tabs)/`, `(auth)/` グループ）
+- [x] **0-6** Firebase JS SDK 導入（Auth / Firestore / `src/services/firebase/client.ts`）
+- [x] **0-7** Firestore セキュリティルール初期版の実装（`firestore.rules`）※デプロイは手動
+- [x] **0-8** Google Maps Platform 設定準備・`.env.example` 整備（APIキー発行は手動）
+- [x] **0-9** Cloud Functions プロジェクト初期化（Gen 2 / Node.js 20 / TypeScript スタブ）
 
 ---
 
