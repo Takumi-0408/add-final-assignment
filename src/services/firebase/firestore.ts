@@ -11,6 +11,7 @@ import {
 import { db } from './client';
 import type { Favorite, FavoriteInput } from '../../types/favorites';
 import type { AppError } from '../../utils/error';
+import { withRetry } from '../../utils/retry';
 
 /** Firestore エラーコードを AppError に変換 */
 function toFirestoreError(e: unknown): AppError {
@@ -31,12 +32,18 @@ function toFirestoreError(e: unknown): AppError {
   };
 }
 
+/** Firestore エラー変換 + 指数バックオフ再試行ラッパー */
 async function withFirestoreError<T>(fn: () => Promise<T>): Promise<T> {
-  try {
-    return await fn();
-  } catch (e) {
-    throw toFirestoreError(e);
-  }
+  return withRetry(
+    async () => {
+      try {
+        return await fn();
+      } catch (e) {
+        throw toFirestoreError(e);
+      }
+    },
+    { maxAttempts: 2, baseDelayMs: 500 },
+  );
 }
 
 /** お気に入りを保存し、生成された favoriteId を返す */

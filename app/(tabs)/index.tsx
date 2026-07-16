@@ -1,48 +1,71 @@
+import { useCallback, memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useCurrentLocation } from '../../src/hooks/useCurrentLocation';
 import { DEFAULT_MAP_DELTA } from '../../src/constants/location';
 import { COLORS } from '../../src/constants/colors';
+import type { LatLng } from '../../src/hooks/locationUtils';
+
+// ─── 地図を memo 化して位置更新ごとの不要な再レンダリングを抑制 ─────────────
+
+type MapSectionProps = {
+  location: LatLng;
+  hasPermission: boolean;
+};
+
+const MapSection = memo(function MapSection({ location, hasPermission }: MapSectionProps) {
+  return (
+    <MapView
+      style={styles.map}
+      provider={PROVIDER_GOOGLE}
+      region={{
+        latitude: location.latitude,
+        longitude: location.longitude,
+        ...DEFAULT_MAP_DELTA,
+      }}
+      showsUserLocation={hasPermission}
+      followsUserLocation={hasPermission}
+      // 地図の移動・ズームアニメーションを有効化
+      moveOnMarkerPress={false}
+      showsCompass={false}
+      toolbarEnabled={false}
+    >
+      {!hasPermission && (
+        <Marker
+          coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+          title="デフォルト地点（東京駅）"
+        />
+      )}
+    </MapView>
+  );
+});
 
 // S-05: ホーム（地図）画面
 export default function HomeScreen() {
   const router = useRouter();
   const { location, hasPermission, isLoading } = useCurrentLocation();
 
-  const openSettings = () => {
+  const openSettings = useCallback(() => {
     if (Platform.OS === 'ios') {
       Linking.openURL('app-settings:');
     } else {
       Linking.openSettings();
     }
-  };
+  }, []);
+
+  const handleSearchPress = useCallback(() => {
+    router.push('/search');
+  }, [router]);
 
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        region={{
-          latitude: location.latitude,
-          longitude: location.longitude,
-          ...DEFAULT_MAP_DELTA,
-        }}
-        showsUserLocation={hasPermission}
-        followsUserLocation={hasPermission}
-      >
-        {!hasPermission && (
-          <Marker
-            coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-            title="デフォルト地点（東京駅）"
-          />
-        )}
-      </MapView>
+      <MapSection location={location} hasPermission={hasPermission} />
 
       {/* 検索バー */}
       <TouchableOpacity
         style={styles.searchBar}
-        onPress={() => router.push('/search')}
+        onPress={handleSearchPress}
         accessibilityRole="search"
         accessibilityLabel="目的地を検索"
       >

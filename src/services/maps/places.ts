@@ -1,5 +1,6 @@
 import type { PlacePrediction, PlaceDetail } from '../../types/places';
 import type { AppError } from '../../utils/error';
+import { withRetry } from '../../utils/retry';
 
 const BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 const getApiKey = () => process.env.EXPO_PUBLIC_MAPS_API_KEY ?? '';
@@ -43,81 +44,91 @@ function toPlacesError(status: string): AppError {
 export async function searchPlaces(input: string): Promise<PlacePrediction[]> {
   if (!input.trim()) return [];
 
-  const params = new URLSearchParams({
-    input: input.trim(),
-    language: 'ja',
-    components: 'country:jp',
-    key: getApiKey(),
-  });
+  return withRetry(
+    async () => {
+      const params = new URLSearchParams({
+        input: input.trim(),
+        language: 'ja',
+        components: 'country:jp',
+        key: getApiKey(),
+      });
 
-  const res = await fetch(`${BASE_URL}/autocomplete/json?${params.toString()}`);
-  if (!res.ok) {
-    throw {
-      code: 'places/http-error',
-      message: '検索リクエストに失敗しました',
-      recoverable: true,
-    } satisfies AppError;
-  }
+      const res = await fetch(`${BASE_URL}/autocomplete/json?${params.toString()}`);
+      if (!res.ok) {
+        throw {
+          code: 'places/http-error',
+          message: '検索リクエストに失敗しました',
+          recoverable: true,
+        } satisfies AppError;
+      }
 
-  const data = (await res.json()) as {
-    status: string;
-    predictions: {
-      place_id: string;
-      description: string;
-      structured_formatting: { main_text: string; secondary_text: string };
-    }[];
-  };
+      const data = (await res.json()) as {
+        status: string;
+        predictions: {
+          place_id: string;
+          description: string;
+          structured_formatting: { main_text: string; secondary_text: string };
+        }[];
+      };
 
-  if (data.status === 'ZERO_RESULTS') return [];
-  if (data.status !== 'OK') throw toPlacesError(data.status);
+      if (data.status === 'ZERO_RESULTS') return [];
+      if (data.status !== 'OK') throw toPlacesError(data.status);
 
-  return data.predictions.map((p) => ({
-    placeId: p.place_id,
-    description: p.description,
-    mainText: p.structured_formatting.main_text,
-    secondaryText: p.structured_formatting.secondary_text,
-  }));
+      return data.predictions.map((p) => ({
+        placeId: p.place_id,
+        description: p.description,
+        mainText: p.structured_formatting.main_text,
+        secondaryText: p.structured_formatting.secondary_text,
+      }));
+    },
+    { maxAttempts: 2, baseDelayMs: 500 },
+  );
 }
 
 /**
  * Place Details で placeId から座標・名称を取得する
  */
 export async function getPlaceDetail(placeId: string): Promise<PlaceDetail> {
-  const params = new URLSearchParams({
-    place_id: placeId,
-    fields: 'place_id,name,formatted_address,geometry',
-    language: 'ja',
-    key: getApiKey(),
-  });
+  return withRetry(
+    async () => {
+      const params = new URLSearchParams({
+        place_id: placeId,
+        fields: 'place_id,name,formatted_address,geometry',
+        language: 'ja',
+        key: getApiKey(),
+      });
 
-  const res = await fetch(`${BASE_URL}/details/json?${params.toString()}`);
-  if (!res.ok) {
-    throw {
-      code: 'places/http-error',
-      message: '場所の情報取得に失敗しました',
-      recoverable: true,
-    } satisfies AppError;
-  }
+      const res = await fetch(`${BASE_URL}/details/json?${params.toString()}`);
+      if (!res.ok) {
+        throw {
+          code: 'places/http-error',
+          message: '場所の情報取得に失敗しました',
+          recoverable: true,
+        } satisfies AppError;
+      }
 
-  const data = (await res.json()) as {
-    status: string;
-    result: {
-      place_id: string;
-      name: string;
-      formatted_address: string;
-      geometry: { location: { lat: number; lng: number } };
-    } | null;
-  };
+      const data = (await res.json()) as {
+        status: string;
+        result: {
+          place_id: string;
+          name: string;
+          formatted_address: string;
+          geometry: { location: { lat: number; lng: number } };
+        } | null;
+      };
 
-  if (data.status !== 'OK' || !data.result) throw toPlacesError(data.status);
+      if (data.status !== 'OK' || !data.result) throw toPlacesError(data.status);
 
-  return {
-    placeId: data.result.place_id,
-    name: data.result.name,
-    address: data.result.formatted_address,
-    location: {
-      latitude: data.result.geometry.location.lat,
-      longitude: data.result.geometry.location.lng,
+      return {
+        placeId: data.result.place_id,
+        name: data.result.name,
+        address: data.result.formatted_address,
+        location: {
+          latitude: data.result.geometry.location.lat,
+          longitude: data.result.geometry.location.lng,
+        },
+      };
     },
-  };
+    { maxAttempts: 2, baseDelayMs: 500 },
+  );
 }

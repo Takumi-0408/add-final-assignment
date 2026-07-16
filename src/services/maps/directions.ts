@@ -3,6 +3,7 @@ import type { WalkRoute } from '../../types/routes';
 import type { Priority } from '../../types/places';
 import type { LatLng } from '../../hooks/locationUtils';
 import type { AppError } from '../../utils/error';
+import { withRetry } from '../../utils/retry';
 
 type SearchWalkRoutesRequest = {
   origin: { lat: number; lng: number };
@@ -30,23 +31,28 @@ export async function searchWalkRoutes(
     'searchWalkRoutes',
   );
 
-  try {
-    const result = await callable({
-      origin: { lat: origin.latitude, lng: origin.longitude },
-      destination: { lat: destination.latitude, lng: destination.longitude },
-      priorities,
-      maxDurationMinutes,
-    });
-    return result.data.routes;
-  } catch (e) {
-    // Firebase HttpsError → AppError に変換
-    const err = e as { code?: string; message?: string };
-    throw {
-      code: `functions/${err.code ?? 'unknown'}`,
-      message: toUserMessage(err.code),
-      recoverable: isRecoverable(err.code),
-    } satisfies AppError;
-  }
+  return withRetry(
+    async () => {
+      try {
+        const result = await callable({
+          origin: { lat: origin.latitude, lng: origin.longitude },
+          destination: { lat: destination.latitude, lng: destination.longitude },
+          priorities,
+          maxDurationMinutes,
+        });
+        return result.data.routes;
+      } catch (e) {
+        // Firebase HttpsError → AppError に変換
+        const err = e as { code?: string; message?: string };
+        throw {
+          code: `functions/${err.code ?? 'unknown'}`,
+          message: toUserMessage(err.code),
+          recoverable: isRecoverable(err.code),
+        } satisfies AppError;
+      }
+    },
+    { maxAttempts: 2, baseDelayMs: 1000 },
+  );
 }
 
 function toUserMessage(code?: string): string {

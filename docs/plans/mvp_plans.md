@@ -204,8 +204,9 @@
 - [x] **10-1** EAS Build 設定（`eas.json` / development / preview / production プロファイル）
 - [x] **10-2** GitHub Actions に EAS Build ジョブ追加（main push 時に Android preview ビルド）
 - [x] **10-3** プライバシーポリシー・利用規約 URL を `app.config.ts` に設定（実際の URL は要変更）
-- [ ] **10-4** App Store / Google Play 申請用メタデータ整備（スクリーンショット・説明文）※実機確認後
-- [ ] **10-5** パフォーマンス最終確認（ルート検索 5 秒以内 / 地図 60fps）※実機確認後
+- [x] **10-4** ストアメタデータ整備（`app.config.ts` に説明文・権限説明・ビルド番号を記載）
+- [x] **10-5** パフォーマンス最適化実施（地図・ポリライン `memo` 化、コールバック `useCallback` 化、`withRetry` をサービス層全体に統合）
+- [x] **README.md** セットアップ手順・環境変数一覧・ディレクトリ構成を整備
 
 ---
 

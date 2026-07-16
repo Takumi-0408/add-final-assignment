@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
@@ -8,19 +9,54 @@ import { COLORS } from '../src/constants/colors';
 import { DEFAULT_MAP_DELTA } from '../src/constants/location';
 import type { WalkRoute } from '../src/types/routes';
 
+// ─── ポリラインを memo 化してルート選択のたびに全再描画しないように ──────────
+
+type RoutePolylinesProps = {
+  routes: WalkRoute[];
+  selectedRouteId: string | undefined;
+};
+
+const RoutePolylines = memo(function RoutePolylines({
+  routes,
+  selectedRouteId,
+}: RoutePolylinesProps) {
+  return (
+    <>
+      {routes.map((route) => {
+        const coords = decodePolyline(route.polyline).map((c) => ({
+          latitude: c.latitude,
+          longitude: c.longitude,
+        }));
+        const isSelected = route.routeId === selectedRouteId;
+        return (
+          <Polyline
+            key={route.routeId}
+            coordinates={coords}
+            strokeColor={isSelected ? COLORS.primary : '#9CA3AF'}
+            strokeWidth={isSelected ? 4 : 2}
+          />
+        );
+      })}
+    </>
+  );
+});
+
 // S-08: ルート提案画面
 export default function RouteSuggestionsScreen() {
   const router = useRouter();
   const { routes, selectedRoute, selectRoute, destination } = useRouteStore();
 
-  const handleSelect = (route: WalkRoute) => {
-    selectRoute(route);
-  };
+  const handleSelect = useCallback(
+    (route: WalkRoute) => {
+      selectRoute(route);
+    },
+    [selectRoute],
+  );
 
-  const handleStartNav = () => {
+  const handleStartNav = useCallback(() => {
     if (!selectedRoute) return;
     router.push('/navigation');
-  };
+  }, [selectedRoute, router]);
 
   const displayRoute = selectedRoute ?? routes[0] ?? null;
   const mapCenter = destination?.location ?? { latitude: 35.6812, longitude: 139.7671 };
@@ -32,19 +68,10 @@ export default function RouteSuggestionsScreen() {
         style={styles.map}
         provider={PROVIDER_GOOGLE}
         region={{ ...mapCenter, ...DEFAULT_MAP_DELTA }}
+        showsCompass={false}
+        toolbarEnabled={false}
       >
-        {routes.map((route) => {
-          const coords = decodePolyline(route.polyline);
-          const isSelected = route.routeId === displayRoute?.routeId;
-          return (
-            <Polyline
-              key={route.routeId}
-              coordinates={coords.map((c) => ({ latitude: c.latitude, longitude: c.longitude }))}
-              strokeColor={isSelected ? COLORS.primary : '#9CA3AF'}
-              strokeWidth={isSelected ? 4 : 2}
-            />
-          );
-        })}
+        <RoutePolylines routes={routes} selectedRouteId={displayRoute?.routeId} />
       </MapView>
 
       {/* ルートカード一覧 */}
