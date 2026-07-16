@@ -4,18 +4,19 @@ import { useRouter } from 'expo-router';
 import { useNavigationStore } from '../src/stores/navigationStore';
 import { useRouteStore } from '../src/stores/routeStore';
 import { useAuthStore } from '../src/stores/authStore';
+import { useFavoritesStore } from '../src/stores/favoritesStore';
 import { formatDistance, formatDuration } from '../src/utils/format';
 import { COLORS } from '../src/constants/colors';
 
 // S-10: 散歩サマリー画面
 export default function SummaryScreen() {
   const router = useRouter();
-  const { elapsedSeconds, walkedMeters, currentRoute } = useNavigationStore();
-  const { selectedRoute } = useRouteStore();
+  const { elapsedSeconds, walkedMeters, currentRoute, stopNavigation } = useNavigationStore();
+  const { selectedRoute, destination, priorities } = useRouteStore();
   const { user } = useAuthStore();
+  const { saveFavorite, isLoading: isSaving, error: saveError } = useFavoritesStore();
 
   const [routeName, setRouteName] = useState('');
-  const [isSaving] = useState(false);
 
   const route = currentRoute ?? selectedRoute;
 
@@ -27,11 +28,31 @@ export default function SummaryScreen() {
       ]);
       return;
     }
-    // Task 7 で Firestore への保存を実装
-    Alert.alert('保存しました', `「${routeName || 'お気に入りルート'}」を保存しました`);
+
+    if (!route || !destination) {
+      Alert.alert('保存できません', 'ルート情報が見つかりませんでした');
+      return;
+    }
+
+    await saveFavorite(user.uid, {
+      name: routeName.trim() || 'お気に入りルート',
+      origin: { latitude: 35.6812, longitude: 139.7671 }, // TODO: 実際の出発地を使用
+      originName: '出発地点',
+      destination: destination.location,
+      destinationName: destination.name,
+      polyline: route.polyline,
+      distanceMeters: route.distanceMeters,
+      durationSeconds: route.durationSeconds,
+      priorities,
+    });
+
+    if (!useFavoritesStore.getState().error) {
+      Alert.alert('保存しました', `「${routeName.trim() || 'お気に入りルート'}」を保存しました`);
+    }
   };
 
   const handleClose = () => {
+    stopNavigation();
     router.replace('/(tabs)');
   };
 
@@ -77,6 +98,7 @@ export default function SummaryScreen() {
           maxLength={50}
           accessibilityLabel="ルート名"
         />
+        {saveError && <Text style={styles.errorText}>{saveError.message}</Text>}
         <TouchableOpacity
           style={[styles.saveButton, isSaving && styles.disabled]}
           onPress={handleSaveFavorite}
@@ -131,7 +153,12 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 12, color: COLORS.textSecondary },
   divider: { width: 1, backgroundColor: COLORS.border },
   favoriteSection: { marginBottom: 24 },
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 10 },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+  },
   nameInput: {
     backgroundColor: COLORS.surface,
     borderRadius: 10,
@@ -141,8 +168,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 15,
     color: COLORS.textPrimary,
-    marginBottom: 12,
+    marginBottom: 8,
   },
+  errorText: { color: COLORS.error, fontSize: 13, marginBottom: 8 },
   saveButton: {
     backgroundColor: COLORS.primary,
     borderRadius: 12,
@@ -151,9 +179,6 @@ const styles = StyleSheet.create({
   },
   saveButtonText: { color: COLORS.surface, fontSize: 15, fontWeight: '700' },
   disabled: { opacity: 0.6 },
-  closeButton: {
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
+  closeButton: { paddingVertical: 14, alignItems: 'center' },
   closeButtonText: { color: COLORS.textSecondary, fontSize: 15 },
 });
